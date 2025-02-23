@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falling Obstacles</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: lightgray;
+        }
+        canvas {
+            background: lightblue;
+            display: block;
+        }
+        #resetButton {
+            display: none;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<nav>
+    <ul>
+        <li><a href="../homepage.html">Home</a></li>
+        <li><a href="../games.html">Games</a></li>
+        <li><a href="../learn.html">Learn</a></li>
+        <li><a href="../extras.html">Extras</a></li>
+    </ul>
+</nav>
+
+<body>
+<div>
+    <canvas id="gameCanvas"></canvas>
+    <button id="resetButton" onclick="resetGame()">Restart Game</button>
+</div>
+
+<footer>
+    <p>- This game was created using <a href="chatgpt.com">ChatGPT</a> -</p>
+</footer>
+
+</body>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = 400;
+    canvas.height = 600;
+    
+    let climber, obstacles, keys, score, gameOver;
+    
+    function initGame() {
+        climber = { x: 180, y: 500, width: 40, height: 40, speed: 5 };
+        obstacles = [];
+        keys = {};
+        score = 0;
+        gameOver = false;
+        document.getElementById("resetButton").style.display = "none";
+    }
+    
+    document.addEventListener("keydown", (e) => keys[e.key] = true);
+    document.addEventListener("keyup", (e) => keys[e.key] = false);
+    
+    function createObstacle() {
+        let xPos = Math.random() * (canvas.width - 40);
+        obstacles.push({ x: xPos, y: -20, width: 40, height: 20, speed: 3 + Math.random() * 2 });
+    }
+    
+    function updateObstacles() {
+        for (let i = 0; i < obstacles.length; i++) {
+            obstacles[i].y += obstacles[i].speed;
+            if (obstacles[i].y > canvas.height) {
+                obstacles.splice(i, 1);
+                score += 10;
+            }
+        }
+    }
+    
+    function checkCollision() {
+        for (let obs of obstacles) {
+            if (climber.x < obs.x + obs.width && climber.x + climber.width > obs.x &&
+                climber.y < obs.y + obs.height && climber.y + climber.height > obs.y) {
+                gameOver = true;
+                document.getElementById("resetButton").style.display = "block";
+            }
+        }
+    }
+    
+    function gameLoop() {
+        if (gameOver) {
+            ctx.fillStyle = "red";
+            ctx.font = "30px Arial";
+            ctx.fillText("Game Over!", 120, 300);
+            return;
+        }
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Move climber
+        if (keys["ArrowLeft"] && climber.x > 0) climber.x -= climber.speed;
+        if (keys["ArrowRight"] && climber.x < canvas.width - climber.width) climber.x += climber.speed;
+        if (keys["ArrowUp"] && climber.y > 0) climber.y -= climber.speed;
+        if (keys["ArrowDown"] && climber.y < canvas.height - climber.height) climber.y += climber.speed;
+        
+        // Draw climber
+        ctx.fillStyle = "green";
+        ctx.fillRect(climber.x, climber.y, climber.width, climber.height);
+        
+        // Draw obstacles
+        ctx.fillStyle = "red";
+        updateObstacles();
+        for (let obs of obstacles) {
+            ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+        }
+        
+        checkCollision();
+        
+        // Display score
+        ctx.fillStyle = "black";
+        ctx.font = "20px Arial";
+        ctx.fillText("Score: " + score, 10, 20);
+        
+        requestAnimationFrame(gameLoop);
+    }
+    
+    function resetGame() {
+        initGame();
+        gameLoop();
+    }
+    
+    setInterval(createObstacle, 1000);
+    initGame();
+    gameLoop();
+</script>
+</html>

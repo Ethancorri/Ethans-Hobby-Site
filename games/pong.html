@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Game</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        canvas {
+            border: 2px solid #333;
+            background-color: #000;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<nav>
+    <ul>
+        <li><a href="../homepage.html">Home</a></li>
+        <li><a href="../games.html">Games</a></li>
+        <li><a href="../learn.html">Learn</a></li>
+        <li><a href="../extras.html">Extras</a></li>
+    </ul>
+</nav>
+
+<body>
+    <div class="controls">
+        <button onclick="setDifficulty('easy')" class="active">Easy</button>
+        <button onclick="setDifficulty('medium')">Medium</button>
+        <button onclick="setDifficulty('hard')">Hard</button>
+    </div>
+    <canvas id="pongCanvas" width="600" height="400"></canvas>
+
+    <footer>
+        <p>- This game was created using <a href="https://x.ai">Grok</a> -</p>
+    </footer>
+    
+    <script>
+        const canvas = document.getElementById("pongCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Game objects
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 10,
+            speedX: 4,
+            speedY: 4
+        };
+
+        const player = {
+            x: 0,
+            y: canvas.height / 2 - 50,
+            width: 10,
+            height: 100,
+            speed: 6,
+            score: 0
+        };
+
+        const ai = {
+            x: canvas.width - 10,
+            y: canvas.height / 2 - 50,
+            width: 10,
+            height: 100,
+            speed: 4, // Default speed (adjusted by difficulty)
+            score: 0
+        };
+
+        // Difficulty settings
+        let difficulty = "easy";
+        const difficultySettings = {
+            easy: { aiSpeed: 2, aiAccuracy: 0.5 },
+            medium: { aiSpeed: 4, aiAccuracy: 0.7 },
+            hard: { aiSpeed: 6, aiAccuracy: 0.9 }
+        };
+
+        // Player controls
+        let upPressed = false;
+        let downPressed = false;
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowUp") upPressed = true;
+            if (e.key === "ArrowDown") downPressed = true;
+        });
+        document.addEventListener("keyup", (e) => {
+            if (e.key === "ArrowUp") upPressed = false;
+            if (e.key === "ArrowDown") downPressed = false;
+        });
+
+        // Set difficulty
+        function setDifficulty(level) {
+            difficulty = level;
+            ai.speed = difficultySettings[level].aiSpeed;
+            document.querySelectorAll(".controls button").forEach(btn => {
+                btn.classList.remove("active");
+                if (btn.textContent.toLowerCase() === level) btn.classList.add("active");
+            });
+        }
+
+        // Reset ball
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.speedX = -ball.speedX;
+            ball.speedY = Math.random() * 4 - 2; // Random vertical speed
+        }
+
+        // Update game
+        function update() {
+            // Move player paddle
+            if (upPressed && player.y > 0) player.y -= player.speed;
+            if (downPressed && player.y < canvas.height - player.height) player.y += player.speed;
+
+            // Move AI paddle
+            const aiCenter = ai.y + ai.height / 2;
+            const ballCenter = ball.y;
+            const aiMove = (ballCenter - aiCenter) * difficultySettings[difficulty].aiAccuracy;
+            if (aiMove > 0 && ai.y < canvas.height - ai.height) ai.y += Math.min(ai.speed, aiMove);
+            if (aiMove < 0 && ai.y > 0) ai.y += Math.max(-ai.speed, aiMove);
+
+            // Move ball
+            ball.x += ball.speedX;
+            ball.y += ball.speedY;
+
+            // Ball collision with top/bottom
+            if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
+                ball.speedY = -ball.speedY;
+            }
+
+            // Ball collision with paddles
+            if (
+                (ball.x - ball.radius < player.x + player.width && ball.y > player.y && ball.y < player.y + player.height) ||
+                (ball.x + ball.radius > ai.x && ball.y > ai.y && ball.y < ai.y + ai.height)
+            ) {
+                ball.speedX = -ball.speedX;
+            }
+
+            // Score points
+            if (ball.x < 0) {
+                ai.score++;
+                resetBall();
+            } else if (ball.x > canvas.width) {
+                player.score++;
+                resetBall();
+            }
+        }
+
+        // Draw game
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw ball
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = "#fff";
+            ctx.fill();
+            ctx.closePath();
+
+            // Draw paddles
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.fillRect(ai.x, ai.y, ai.width, ai.height);
+
+            // Draw scores
+            ctx.font = "30px Arial";
+            ctx.fillText(player.score, canvas.width / 4, 50);
+            ctx.fillText(ai.score, 3 * canvas.width / 4, 50);
+
+            // Draw center line
+            ctx.setLineDash([5, 15]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.strokeStyle = "#fff";
+            ctx.stroke();
+        }
+
+        // Game loop
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start game
+        gameLoop();
+    </script>
+</body>
+</html>

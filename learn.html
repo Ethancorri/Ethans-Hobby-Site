@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn - My Website</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .learn-container {
+            display: grid;
+            grid-template-columns: 1fr; /* 1 column */
+            grid-template-rows: repeat(3, auto); /* 3 rows */
+            gap: 20px;
+            padding: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+            overflow: hidden; /* Hide overflow during animation */
+        }
+        .learn-item {
+            text-align: center;
+            opacity: 0; /* Start hidden for animation */
+            transform: translateX(-100%); /* Start off-screen to the left */
+            transition: opacity 0.5s ease, transform 0.5s ease; /* Smooth transition */
+        }
+        .learn-item.visible {
+            opacity: 1;
+            transform: translateX(0); /* Slide to center */
+        }
+        .learn-item.exit-left {
+            opacity: 0;
+            transform: translateX(-100%); /* Exit to left */
+        }
+        .learn-item.exit-right {
+            opacity: 0;
+            transform: translateX(100%); /* Exit to right */
+        }
+        .learn-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border: 2px solid #333;
+            border-radius: 8px;
+        }
+        .learn-item p {
+            margin: 5px 0;
+            font-size: 1.1rem;
+        }
+        .pagination {
+            text-align: center;
+            padding: 20px;
+        }
+        .pagination a {
+            margin: 0 10px;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+        .pagination a.active {
+            color: #007BFF;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Learn</h1>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="homepage.html">Home</a></li>
+            <li><a href="games.html">Games</a></li>
+            <li><a href="learn.html">Learn</a></li>
+            <li><a href="extras.html">Extras</a></li>
+        </ul>
+    </nav>
+
+    <div class="learn-container" id="learnContainer">
+        <!-- Items will be populated by JavaScript -->
+    </div>
+
+    <div class="pagination" id="pagination">
+        <a href="#" onclick="showPage(1)" class="active">1</a>
+        <a href="#" onclick="showPage(2)">2</a>
+        <a href="#" onclick="showPage(3)">3</a>
+    </div>
+
+    <footer>
+        <p>© 2025 My Website. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Language learning topics (3 pages, 3 items per page = 9 total)
+        const learnItems = [
+            { name: "Spanish Vocabulary", img: "https://via.placeholder.com/100?text=Spanish" },
+            { name: "French Grammar", img: "https://via.placeholder.com/100?text=French" },
+            { name: "German Pronunciation", img: "https://via.placeholder.com/100?text=German" },
+            // Page 2
+            { name: "Italian Phrases", img: "https://via.placeholder.com/100?text=Italian" },
+            { name: "Japanese Hiragana", img: "https://via.placeholder.com/100?text=Japanese" },
+            { name: "Mandarin Tones", img: "https://via.placeholder.com/100?text=Mandarin" },
+            // Page 3
+            { name: "Russian Alphabet", img: "https://via.placeholder.com/100?text=Russian" },
+            { name: "Korean Verbs", img: "https://via.placeholder.com/100?text=Korean" },
+            { name: "Portuguese Conjugation", img: "https://via.placeholder.com/100?text=Portuguese" }
+        ];
+
+        const itemsPerPage = 3;
+        const container = document.getElementById("learnContainer");
+        const paginationLinks = document.querySelectorAll(".pagination a");
+        let currentPage = 1;
+
+        function showPage(page) {
+            // Determine direction of slide
+            const isNext = page > currentPage;
+            const items = container.querySelectorAll(".learn-item");
+
+            // Exit animation for current items
+            items.forEach(item => {
+                item.classList.remove("visible");
+                item.classList.add(isNext ? "exit-right" : "exit-left");
+            });
+
+            // Wait for exit animation to finish, then load new items
+            setTimeout(() => {
+                container.innerHTML = ""; // Clear container
+
+                const start = (page - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+                const currentItems = learnItems.slice(start, end);
+
+                // Populate with new items
+                currentItems.forEach(item => {
+                    const learnItem = document.createElement("div");
+                    learnItem.className = "learn-item";
+                    learnItem.innerHTML = `
+                        <img src="${item.img}" alt="${item.name}">
+                        <p>${item.name}</p>
+                    `;
+                    container.appendChild(learnItem);
+                });
+
+                // Trigger entrance animation
+                setTimeout(() => {
+                    container.querySelectorAll(".learn-item").forEach(item => {
+                        item.classList.add("visible");
+                    });
+                }, 10); // Small delay to ensure DOM update
+
+                // Update pagination
+                paginationLinks.forEach(link => {
+                    link.classList.remove("active");
+                    if (parseInt(link.textContent) === page) {
+                        link.classList.add("active");
+                    }
+                });
+
+                currentPage = page; // Update current page
+            }, 500); // Match transition duration (0.5s)
+        }
+
+        // Load page 1 by default
+        showPage(1);
+    </script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games - My Website</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .games-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .game-card {
+            text-align: center;
+            transition: transform 0.3s ease; /* Optional: subtle hover effect */
+        }
+        .game-card:hover {
+            transform: scale(1.05); /* Optional: slight zoom on hover */
+        }
+        .game-card img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border: 2px solid #333;
+            border-radius: 8px;
+        }
+        .game-card p {
+            margin: 5px 0;
+            color: #333;
+            font-weight: bold;
+        }
+        .game-card a {
+            text-decoration: none; /* Remove underline from link */
+            display: block; /* Make the entire card clickable */
+        }
+        .pagination {
+            text-align: center;
+            padding: 20px;
+        }
+        .pagination a {
+            margin: 0 10px;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+        .pagination a.active {
+            color: #007BFF;
+        }
+    </style>
+</head>
+
+<header>
+    <h1>Games</h1>
+</header>
+<nav>
+    <ul>
+        <li><a href="homepage.html">Home</a></li>
+        <li><a href="games.html">Games</a></li>
+        <li><a href="learn.html">Learn</a></li>
+        <li><a href="extras.html">Extras</a></li>
+    </ul>
+</nav>
+
+<body>
+    <div class="games-container" id="gamesContainer"></div>
+
+    <div class="pagination" id="pagination">
+        <a href="#" onclick="showPage(1)" class="active">1</a>
+        <a href="#" onclick="showPage(2)">2</a>
+        <a href="#" onclick="showPage(3)">3</a>
+        <a href="#" onclick="showPage(4)">4</a>
+    </div>
+
+    <footer>
+        <p>© 2025 My Website. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Game data with Pong link
+        const games = [
+            { name: "Pong", img: "images/game-images/pong.jpg", link: "games/pong.html" },
+            { name: "Avoid Obstacles", img: "https://via.placeholder.com/100", link: "games/avoid-falling-obstacles.html" },
+            { name: "PacMan", img: "https://via.placeholder.com/100", link: "" },
+            { name: "2048", img: "https://via.placeholder.com/100", link: "" },
+            { name: "Tetris", img: "https://via.placeholder.com/100", link: "" },
+            { name: "Snake", img: "images/game-images/snake.png", link: "games/snake.html" },
+            { name: "Space Invaders", img: "https://via.placeholder.com/100", link: "" },
+            { name: "Flappy Bird", img: "https://via.placeholder.com/100", link: "" },
+            { name: "Breakout", img: "https://via.placeholder.com/100", link: "" },
+            // Page 2
+            { name: "Game 10", img: "https://via.placeholder.com/100" },
+            { name: "Game 11", img: "https://via.placeholder.com/100" },
+            { name: "Game 12", img: "https://via.placeholder.com/100" },
+            { name: "Game 13", img: "https://via.placeholder.com/100" },
+            { name: "Game 14", img: "https://via.placeholder.com/100" },
+            { name: "Game 15", img: "https://via.placeholder.com/100" },
+            { name: "Game 16", img: "https://via.placeholder.com/100" },
+            { name: "Game 17", img: "https://via.placeholder.com/100" },
+            { name: "Game 18", img: "https://via.placeholder.com/100" },
+            // Page 3
+            { name: "Game 19", img: "https://via.placeholder.com/100" },
+            { name: "Game 20", img: "https://via.placeholder.com/100" },
+            { name: "Game 21", img: "https://via.placeholder.com/100" },
+            { name: "Game 22", img: "https://via.placeholder.com/100" },
+            { name: "Game 23", img: "https://via.placeholder.com/100" },
+            { name: "Game 24", img: "https://via.placeholder.com/100" },
+            { name: "Game 25", img: "https://via.placeholder.com/100" },
+            { name: "Game 26", img: "https://via.placeholder.com/100" },
+            { name: "Game 27", img: "https://via.placeholder.com/100" },
+            // Page 4
+            { name: "Game 28", img: "https://via.placeholder.com/100" },
+            { name: "Game 29", img: "https://via.placeholder.com/100" },
+            { name: "Game 30", img: "https://via.placeholder.com/100" },
+            { name: "Game 31", img: "https://via.placeholder.com/100" },
+            { name: "Game 32", img: "https://via.placeholder.com/100" },
+            { name: "Game 33", img: "https://via.placeholder.com/100" },
+            { name: "Game 34", img: "https://via.placeholder.com/100" },
+            { name: "Game 35", img: "https://via.placeholder.com/100" },
+            { name: "Game 36", img: "https://via.placeholder.com/100" }
+        ];
+
+        const gamesPerPage = 9;
+        const container = document.getElementById("gamesContainer");
+        const paginationLinks = document.querySelectorAll(".pagination a");
+
+        function showPage(page) {
+            container.innerHTML = "";
+
+            const start = (page - 1) * gamesPerPage;
+            const end = start + gamesPerPage;
+            const currentGames = games.slice(start, end);
+
+            currentGames.forEach(game => {
+                const gameCard = document.createElement("div");
+                gameCard.className = "game-card";
+
+                // If there's a link, wrap the entire card in an <a> tag
+                if (game.link) {
+                    gameCard.innerHTML = `
+                        <a href="${game.link}">
+                            <img src="${game.img}" alt="${game.name}">
+                            <p>${game.name}</p>
+                        </a>
+                    `;
+                } else {
+                    gameCard.innerHTML = `
+                        <img src="${game.img}" alt="${game.name}">
+                        <p>${game.name}</p>
+                    `;
+                }
+
+                container.appendChild(gameCard);
+            });
+
+            paginationLinks.forEach(link => {
+                link.classList.remove("active");
+                if (parseInt(link.textContent) === page) {
+                    link.classList.add("active");
+                }
+            });
+        }
+
+        showPage(1); // Load page 1 by default
+    </script>
+</body>
+</html>
