@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pac-Man Game</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        canvas {
+            border: 2px solid black;
+            background-color: #000;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        #gameInfo {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        #restartButton {
+            font-size: 18px;
+            padding: 10px 20px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<nav>
+    <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../games.html">Games</a></li>
+        <li><a href="../learn.html">Learn</a></li>
+        <li><a href="../extras.html">Extras</a></li>
+    </ul>
+</nav>
+
+<body>
+    <div id="gameInfo">Score: 0 | Lives: 3</div>
+    <canvas id="gameCanvas" width="448" height="496"></canvas>
+    <button id="restartButton" onclick="restartGame()">Restart</button>
+
+    <footer>
+        <p>- This game was created using <a href="https://x.ai">Grok</a> -</p>
+    </footer>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gameInfo = document.getElementById('gameInfo');
+
+        // Game constants
+        const tileSize = 16;
+        const rows = 31;
+        const cols = 28;
+
+        // Maze layout (1 = wall, 0 = dot, 2 = Pac-Man start, 3 = ghost start)
+        const maze = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+            [1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1],
+            [1,0,1,0,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,0,0,0,1],
+            [1,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1],
+            [1,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,1],
+            [1,0,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,0,1],
+            [1,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,1],
+            [1,1,1,1,0,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,0,1,1,1,1],
+            [1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1],
+            [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,0,0,0,0,0,1],
+            [1,0,1,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,1,0,1],
+            [1,0,0,0,0,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,0,0,0,0,1],
+            [1,1,1,1,0,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,1,0,1,1,1,1],
+            [1,0,0,0,0,1,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,1],
+            [1,0,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,0,1,1,0,1],
+            [1,0,0,0,0,1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,0,0,0,0,1],
+            [1,1,1,1,0,1,0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0,1,0,1,1,1,1],
+            [1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1],
+            [1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        // Game objects
+        let pacman = { x: 0, y: 0, dx: 0, dy: 0, nextDx: 0, nextDy: 0, speed: 2, radius: 7, angle: 0, mouthOpen: true };
+        let ghosts = [];
+        let dots = [];
+        let score = 0;
+        let lives = 3;
+        let dotCount = 0;
+
+        // Keyboard controls
+        let keys = {};
+        window.addEventListener('keydown', (e) => keys[e.key] = true);
+        window.addEventListener('keyup', (e) => keys[e.key] = false);
+
+        // Initialize game
+        function init() {
+            pacman.x = 0; pacman.y = 0; pacman.dx = 0; pacman.dy = 0; pacman.nextDx = 0; pacman.nextDy = 0;
+            ghosts = [];
+            dots = [];
+            dotCount = 0;
+
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    if (maze[y][x] === 2) {
+                        pacman.x = x * tileSize + tileSize / 2;
+                        pacman.y = y * tileSize + tileSize / 2;
+                    } else if (maze[y][x] === 3) {
+                        ghosts.push({
+                            x: x * tileSize + tileSize / 2,
+                            y: y * tileSize + tileSize / 2,
+                            dx: Math.random() > 0.5 ? 1 : -1,
+                            dy: 0,
+                            speed: 1.5,
+                            radius: 7,
+                            color: ghosts.length === 0 ? 'red' : 'pink'
+                        });
+                    } else if (maze[y][x] === 0) {
+                        dots.push({ x: x * tileSize + tileSize / 2, y: y * tileSize + tileSize / 2, eaten: false });
+                        dotCount++;
+                    }
+                }
+            }
+            updateGameInfo();
+        }
+
+        // Update game state
+        function update() {
+            // Handle Pac-Man input for next direction
+            if (keys['ArrowUp']) { pacman.nextDx = 0; pacman.nextDy = -pacman.speed; pacman.angle = -Math.PI / 2; }
+            if (keys['ArrowDown']) { pacman.nextDx = 0; pacman.nextDy = pacman.speed; pacman.angle = Math.PI / 2; }
+            if (keys['ArrowLeft']) { pacman.nextDx = -pacman.speed; pacman.nextDy = 0; pacman.angle = Math.PI; }
+            if (keys['ArrowRight']) { pacman.nextDx = pacman.speed; pacman.nextDy = 0; pacman.angle = 0; }
+
+            // Try to change direction if next direction is valid
+            let nextX = pacman.x + pacman.nextDx;
+            let nextY = pacman.y + pacman.nextDy;
+            if (!collidesWithWall(nextX, nextY)) {
+                pacman.dx = pacman.nextDx;
+                pacman.dy = pacman.nextDy;
+            }
+
+            // Move Pac-Man in current direction if possible
+            nextX = pacman.x + pacman.dx;
+            nextY = pacman.y + pacman.dy;
+            if (!collidesWithWall(nextX, nextY)) {
+                pacman.x = nextX;
+                pacman.y = nextY;
+            } else {
+                pacman.dx = 0;
+                pacman.dy = 0;
+            }
+
+            // Dot collision
+            dots.forEach(dot => {
+                if (!dot.eaten) {
+                    let dx = pacman.x - dot.x;
+                    let dy = pacman.y - dot.y;
+                    if (Math.hypot(dx, dy) < pacman.radius + 3) {
+                        dot.eaten = true;
+                        score += 10;
+                        dotCount--;
+                        if (dotCount === 0) {
+                            alert(`You Win! Score: ${score}`);
+                            init();
+                        }
+                    }
+                }
+            });
+
+            // Ghost movement
+            ghosts.forEach(ghost => {
+                let nextX = ghost.x + ghost.dx;
+                let nextY = ghost.y + ghost.dy;
+                if (collidesWithWall(nextX, nextY) || Math.random() < 0.1) {
+                    let directions = [[ghost.speed, 0], [-ghost.speed, 0], [0, ghost.speed], [0, -ghost.speed]];
+                    let validDir = directions[Math.floor(Math.random() * directions.length)];
+                    while (collidesWithWall(ghost.x + validDir[0], ghost.y + validDir[1])) {
+                        validDir = directions[Math.floor(Math.random() * directions.length)];
+                    }
+                    ghost.dx = validDir[0];
+                    ghost.dy = validDir[1];
+                }
+                ghost.x += ghost.dx;
+                ghost.y += ghost.dy;
+
+                // Ghost collision
+                let dx = pacman.x - ghost.x;
+                let dy = pacman.y - ghost.y;
+                if (Math.hypot(dx, dy) < pacman.radius + ghost.radius) {
+                    lives--;
+                    if (lives <= 0) {
+                        alert(`Game Over! Final Score: ${score}`);
+                        init();
+                        score = 0;
+                        lives = 3;
+                    } else {
+                        pacman.x = 13.5 * tileSize;
+                        pacman.y = 29 * tileSize;
+                        pacman.dx = 0;
+                        pacman.dy = 0;
+                        pacman.nextDx = 0;
+                        pacman.nextDy = 0;
+                    }
+                }
+            });
+
+            pacman.mouthOpen = !pacman.mouthOpen;
+            updateGameInfo();
+        }
+
+        // Collision detection
+        function collidesWithWall(x, y) {
+            let gridX = Math.floor(x / tileSize);
+            let gridY = Math.floor(y / tileSize);
+            return gridX < 0 || gridX >= cols || gridY < 0 || gridY >= rows || maze[gridY][gridX] === 1;
+        }
+
+        // Draw game
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw maze
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    if (maze[y][x] === 1) {
+                        ctx.fillStyle = 'blue';
+                        ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                    }
+                }
+            }
+
+            // Draw dots
+            dots.forEach(dot => {
+                if (!dot.eaten) {
+                    ctx.beginPath();
+                    ctx.arc(dot.x, dot.y, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = 'white';
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            });
+
+            // Draw Pac-Man
+            ctx.beginPath();
+            let startAngle = pacman.angle + (pacman.mouthOpen ? 0.2 : 0);
+            let endAngle = pacman.angle + (pacman.mouthOpen ? Math.PI * 2 - 0.2 : Math.PI * 2);
+            ctx.arc(pacman.x, pacman.y, pacman.radius, startAngle, endAngle);
+            ctx.lineTo(pacman.x, pacman.y);
+            ctx.fillStyle = 'yellow';
+            ctx.fill();
+            ctx.closePath();
+
+            // Draw ghosts
+            ghosts.forEach(ghost => {
+                ctx.beginPath();
+                ctx.arc(ghost.x, ghost.y, ghost.radius, 0, Math.PI * 2);
+                ctx.fillStyle = ghost.color;
+                ctx.fill();
+                ctx.closePath();
+            });
+        }
+
+        // Update game info
+        function updateGameInfo() {
+            gameInfo.textContent = `Score: ${score} | Lives: ${lives}`;
+        }
+
+        // Restart game
+        function restartGame() {
+            score = 0;
+            lives = 3;
+            init();
+        }
+
+        // Game loop
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start game
+        init();
+        gameLoop();
+    </script>
+</body>
+</html>

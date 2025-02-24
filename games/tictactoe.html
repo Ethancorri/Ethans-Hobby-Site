@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        .board { display: grid; grid-template-columns: repeat(3, 100px); grid-gap: 5px; margin: 20px auto; width: 315px; }
+        .cell { width: 100px; height: 100px; font-size: 2em; text-align: center; vertical-align: middle; cursor: pointer; border: 1px solid black; display: flex; justify-content: center; align-items: center; }
+        .cell.taken { cursor: not-allowed; }
+    </style>
+</head>
+
+<nav>
+    <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../games.html">Games</a></li>
+        <li><a href="../learn.html">Learn</a></li>
+        <li><a href="../extras.html">Extras</a></li>
+    </ul>
+</nav>
+
+<body>
+    <h1>Tic-Tac-Toe</h1>
+    <label for="difficulty">Choose difficulty:</label>
+    <select id="difficulty">
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+    </select>
+    <div class="board" id="board"></div>
+    <button onclick="resetGame()">Reset Game</button>
+
+    <footer>
+        <p>- This game was created using <a href="chatgpt.com">ChatGPT</a> -</p>
+    </footer>
+
+    <script>
+        const board = document.getElementById("board");
+        const difficultySelect = document.getElementById("difficulty");
+        let cells = Array(9).fill(null);
+        let currentPlayer = "X";
+
+        function createBoard() {
+            board.innerHTML = "";
+            cells = Array(9).fill(null);
+            for (let i = 0; i < 9; i++) {
+                let cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.dataset.index = i;
+                cell.addEventListener("click", handleMove);
+                board.appendChild(cell);
+            }
+        }
+
+        function handleMove(event) {
+            let index = event.target.dataset.index;
+            if (cells[index] || checkWinner()) return;
+            cells[index] = currentPlayer;
+            event.target.textContent = currentPlayer;
+            event.target.classList.add("taken");
+            if (checkWinner()) return;
+            currentPlayer = "O";
+            setTimeout(aiMove, 500);
+        }
+
+        function aiMove() {
+            let difficulty = difficultySelect.value;
+            let move;
+            if (difficulty === "easy") move = easyMove();
+            else if (difficulty === "medium") move = mediumMove();
+            else move = bestMove();
+            if (move !== undefined) {
+                cells[move] = "O";
+                document.querySelector(`[data-index='${move}']`).textContent = "O";
+                document.querySelector(`[data-index='${move}']`).classList.add("taken");
+            }
+            if (!checkWinner()) currentPlayer = "X";
+        }
+
+        function easyMove() {
+            let available = cells.map((v, i) => v === null ? i : null).filter(v => v !== null);
+            return available[Math.floor(Math.random() * available.length)];
+        }
+
+        function mediumMove() {
+            return easyMove(); // Can add smarter logic here
+        }
+
+        function bestMove() {
+            let bestScore = -Infinity, move;
+            for (let i = 0; i < 9; i++) {
+                if (!cells[i]) {
+                    cells[i] = "O";
+                    let score = minimax(cells, false);
+                    cells[i] = null;
+                    if (score > bestScore) { bestScore = score; move = i; }
+                }
+            }
+            return move;
+        }
+
+        function minimax(board, isMaximizing) {
+            let result = checkWinner();
+            if (result === "X") return -10;
+            if (result === "O") return 10;
+            if (!board.includes(null)) return 0;
+            let bestScore = isMaximizing ? -Infinity : Infinity;
+            for (let i = 0; i < 9; i++) {
+                if (!board[i]) {
+                    board[i] = isMaximizing ? "O" : "X";
+                    let score = minimax(board, !isMaximizing);
+                    board[i] = null;
+                    bestScore = isMaximizing ? Math.max(score, bestScore) : Math.min(score, bestScore);
+                }
+            }
+            return bestScore;
+        }
+
+        function checkWinner() {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+            for (let pattern of winPatterns) {
+                let [a, b, c] = pattern;
+                if (cells[a] && cells[a] === cells[b] && cells[a] === cells[c]) {
+                    setTimeout(() => alert(`${cells[a]} wins!`), 10);
+                    return cells[a];
+                }
+            }
+            if (!cells.includes(null)) {
+                setTimeout(() => alert("It's a draw!"), 10);
+                return "draw";
+            }
+            return null;
+        }
+
+        function resetGame() {
+            currentPlayer = "X";
+            createBoard();
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>
